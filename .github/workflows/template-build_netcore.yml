@@ -1,0 +1,100 @@
+name: DotNet Build & Publish Template
+
+on:
+  workflow_call:
+    inputs:
+      pathToProjects:
+        required: true
+        type: string
+      project:
+        required: true
+        type: string
+      artifactPath:
+        required: true
+        type: string
+      artifactName:
+        required: true
+        type: string
+      fileDestination:
+        required: false
+        type: string
+        default: ''
+      configuration:
+        required: false
+        type: string
+        default: 'Debug'
+      targetFramework:
+        required: false
+        type: string
+        default: '7.0'
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Print parameters
+        shell: pwsh
+        run: |
+          Write-Host "pathToProjects: ${{ inputs.pathToProjects }}"
+          Write-Host "Project: ${{ inputs.project }}"
+          Write-Host "artifactPath: ${{ inputs.artifactPath }}"
+          Write-Host "artifactName: ${{ inputs.artifactName }}"
+          Write-Host "fileDestination: ${{ inputs.fileDestination }}"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ inputs.targetFramework }}
+
+      - name: Restore dependencies
+        run: dotnet restore "${{ inputs.pathToProjects }}" --verbosity detailed
+
+      - name: Build and publish project
+        run: >
+          dotnet build "${{ inputs.pathToProjects }}"
+          /p:DeployOnBuild=true
+          /p:WebPublishMethod=Package
+          /p:PackageAsSingleFile=true
+          /p:SkipInvalidConfigurations=true
+          /p:DesktopBuildPackageLocation="${{ github.workspace }}\WebApp.zip"
+          /p:DeployIisAppPath="${{ inputs.fileDestination }}"
+        shell: pwsh
+
+      - name: Unzip WebApp
+        run: |
+          Expand-Archive WebApp.zip -DestinationPath "${{ inputs.fileDestination }}"
+        working-directory: ${{ github.workspace }}
+        shell: pwsh
+
+      - name: Delete PDB files
+        run: |
+          Get-ChildItem -Recurse -Include *.pdb | Remove-Item -Force
+        working-directory: ${{ github.workspace }}
+        shell: pwsh
+
+      - name: Copy files to artifact path
+        run: |
+          $source = "${{ github.workspace }}\${{ inputs.project }}\obj\${{ inputs.configuration }}\"
+          $pubTmpOut = Get-ChildItem -Recurse -Path $source -Filter 'PubTmp' | Where-Object { $_.FullName -like '*\Out' }
+          if ($pubTmpOut) {
+            Copy-Item -Path "$($pubTmpOut.FullName)\*" -Destination "${{ inputs.artifactPath }}\${{ inputs.artifactName }}" -Recurse -Exclude *.pdb
+          } else {
+            Write-Host "PubTmp\\Out folder not found"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Archive artifact
+        run: |
+          Compress-Archive -Path "${{ inputs.artifactPath }}\${{ inputs.artifactName }}\*" -DestinationPath "${{ github.workspace }}\${{ inputs.artifactName }}.zip"
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifactName }}
+          path: "${{ github.workspace }}\${{ inputs.artifactName }}.zip"
