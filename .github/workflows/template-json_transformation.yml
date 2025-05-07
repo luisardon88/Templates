@@ -19,14 +19,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Print parameters
+        shell: pwsh
+        run: |
+          Get-Content '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
+
       - name: Print Config File Before Transformation
-        run: type "${{ github.event.inputs.fileTotransform }}"
-        working-directory: ${{ github.event.inputs.workingDirectoryToTransform }}
+        run: type "${{ inputs.fileTotransform }}"
+        working-directory: '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
         shell: powershell
 
       - name: Transform JSON File with Environment Variables
         run: |
-          $jsonPath = "${{ github.event.inputs.fileTotransform }}"
+          $jsonPath = "${{ inputs.fileTotransform }}"
           $fullPath = Join-Path -Path $PWD -ChildPath $jsonPath
           $json = Get-Content $fullPath | ConvertFrom-Json
 
@@ -38,10 +43,10 @@ jobs:
           }
 
           $json | ConvertTo-Json -Depth 10 | Set-Content $fullPath
-        working-directory: ${{ github.event.inputs.workingDirectoryToTransform }}
+        working-directory: ${{ inputs.workingDirectoryToTransform }}
         shell: powershell
 
       - name: Print Config File After Transformation
-        run: type "${{ github.event.inputs.fileTotransform }}"
-        working-directory: ${{ github.event.inputs.workingDirectoryToTransform }}
+        run: type "${{ inputs.fileTotransform }}"
+        working-directory: ${{ inputs.workingDirectoryToTransform }}
         shell: powershell
