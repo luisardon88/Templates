@@ -79,7 +79,7 @@ jobs:
       - name: Copy Files
         shell: pwsh
         run: |
-          $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}"
+          $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}\${{ inputs.targetFramework }}\PubTmp\Out"
           $outDirs = Get-ChildItem -Path $sourceBase -Recurse -Directory | Where-Object { $_.FullName -like '*\PubTmp\Out' }
 
           write host $sourceBase
