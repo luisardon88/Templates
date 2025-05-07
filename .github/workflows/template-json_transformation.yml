@@ -42,7 +42,7 @@ jobs:
           $json = Get-Content $fullPath -Raw | ConvertFrom-Json
       
           foreach ($property in $json.PSObject.Properties) {
-            $envValue = $env:$($property.Name)
+            $envValue = ${env:$($property.Name)}
             if ($envValue) {
               Write-Host "Reemplazando '$($property.Name)' con valor del entorno."
               $json.$($property.Name) = $envValue
