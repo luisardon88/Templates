@@ -79,7 +79,7 @@ jobs:
       - name: Copy Files
         shell: pwsh
         run: |
-            $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}\${{ inputs.targetFramework }}\PubTmp\Out"
+            $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}\net${{ inputs.targetFramework }}\PubTmp\Out"
             $targetPath = Join-Path "${{ inputs.artifactPath }}" "${{ inputs.artifactName }}"
             
             Write-Host "Source path: $sourceBase"
