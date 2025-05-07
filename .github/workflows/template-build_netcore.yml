@@ -81,7 +81,25 @@ jobs:
         run: |
           $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}"
           $outDirs = Get-ChildItem -Path $sourceBase -Recurse -Directory | Where-Object { $_.FullName -like '*\PubTmp\Out' }
-      
+
+          write host $sourceBase
+          write host $outDirs
+
+          if (Test-Path $sourceBase) 
+          {
+              Write-Host "La ruta base existe"
+          } else {
+              Write-Host "La ruta base NO existe"
+          }
+
+          if (Test-Path $outDirs) 
+          {
+              Write-Host "La ruta out existe"
+          } else {
+              Write-Host "La ruta out NO existe"
+          }
+          
+          
           if (-not $outDirs) {
             Write-Error "No PubTmp\\Out folders found"
             exit 1
