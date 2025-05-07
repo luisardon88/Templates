@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
         working-directory: ${{ inputs.workingDirectoryToTransform }}
         run: |
-          $jsonFile = "${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}"
+          $jsonFile = "${{inputs.fileTotransform}}"
           $fullPath = Join-Path -Path (Get-Location) -ChildPath $jsonFile
       
           if (-not (Test-Path $fullPath)) {
