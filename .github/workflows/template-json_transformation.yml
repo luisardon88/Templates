@@ -1,15 +1,14 @@
 name: File Transform JSON
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       workingDirectoryToTransform:
-        description: 'Directorio de trabajo a transformar'
         required: true
-        default: './'
+        type: string 
       fileTotransform:
-        description: 'Archivo JSON a transformar'
         required: true
+        type: string 
         default: 'appsettings.json'
 
 jobs:
