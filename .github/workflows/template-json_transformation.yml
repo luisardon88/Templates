@@ -19,11 +19,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Print parameters
-        shell: pwsh
-        run: |
-          Get-Content '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
-
       - name: Transform JSON File with Environment Variables
         shell: pwsh
         working-directory: ${{ inputs.workingDirectoryToTransform }}
@@ -54,8 +49,3 @@ jobs:
           Write-Host "Transformación completada. Contenido final:"
           Get-Content $fullPath
 
-
-      - name: Print Config File After Transformation
-        shell: pwsh
-        run: |
-          Get-Content '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
