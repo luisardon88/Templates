@@ -73,7 +73,7 @@ jobs:
       - name: Delete PDB files
         run: |
           Get-ChildItem -Recurse -Include *.pdb | Remove-Item -Force
-        working-directory: "${{ inputs.pathToProjects }}"
+        working-directory: ${{ github.workspace }}
         shell: pwsh
 
       - name: Copy files to artifact path
