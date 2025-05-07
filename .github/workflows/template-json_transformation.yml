@@ -24,14 +24,9 @@ jobs:
         run: |
           Get-Content '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
 
-      - name: Print Config File Before Transformation
-        run: type "${{ inputs.fileTotransform }}"
-        working-directory: '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
-        shell: powershell
-
       - name: Transform JSON File with Environment Variables
         run: |
-          $jsonPath = "${{ inputs.fileTotransform }}"
+          $jsonPath = "${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}"
           $fullPath = Join-Path -Path $PWD -ChildPath $jsonPath
           $json = Get-Content $fullPath | ConvertFrom-Json
 
@@ -47,6 +42,6 @@ jobs:
         shell: powershell
 
       - name: Print Config File After Transformation
-        run: type "${{ inputs.fileTotransform }}"
-        working-directory: ${{ inputs.workingDirectoryToTransform }}
-        shell: powershell
+        shell: pwsh
+        run: |
+          Get-Content '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
