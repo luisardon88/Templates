@@ -75,13 +75,21 @@ jobs:
           Get-ChildItem -Recurse -Include *.pdb | Remove-Item -Force
         working-directory: ${{ github.workspace }}
         shell: pwsh
-
+      
       - name: Copy files to artifact path
         run: |
-          $source = "${{ github.workspace }}\${{ inputs.project }}\obj\${{ inputs.configuration }}\"
-          $pubTmpOut = Get-ChildItem -Recurse -Path $source -Filter 'PubTmp' | Where-Object { $_.FullName -like '*\Out' }
+          $buildPath = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}"
+          
+          # Buscar carpeta "Out" bajo cualquier carpeta "PubTmp"
+          $pubTmpOut = Get-ChildItem -Path $buildPath -Recurse -Directory | Where-Object { $_.FullName -like '*\PubTmp\Out' }
+          
           if ($pubTmpOut) {
-            Copy-Item -Path "$($pubTmpOut.FullName)\*" -Destination "${{ inputs.artifactPath }}\${{ inputs.artifactName }}" -Recurse -Exclude *.pdb
+            foreach ($outDir in $pubTmpOut) {
+              Write-Host "Copying from: $($outDir.FullName)"
+              $destination = Join-Path "${{ inputs.artifactPath }}" "${{ inputs.artifactName }}"
+              New-Item -ItemType Directory -Path $destination -Force | Out-Null
+              Copy-Item -Path "$($outDir.FullName)\*" -Destination $destination -Recurse -Exclude *.pdb
+            }
           } else {
             Write-Host "PubTmp\\Out folder not found"
             exit 1
