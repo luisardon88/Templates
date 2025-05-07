@@ -25,21 +25,35 @@ jobs:
           Get-Content '${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}'
 
       - name: Transform JSON File with Environment Variables
+        shell: pwsh
+        working-directory: ${{ inputs.workingDirectoryToTransform }}
         run: |
-          $jsonPath = "${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}"
-          $fullPath = Join-Path -Path $PWD -ChildPath $jsonPath
-          $json = Get-Content $fullPath | ConvertFrom-Json
-
+          $jsonFile = "${{ inputs.workingDirectoryToTransform }}/${{inputs.fileTotransform}}"
+          $fullPath = Join-Path -Path (Get-Location) -ChildPath $jsonFile
+      
+          if (-not (Test-Path $fullPath)) {
+            Write-Error "Archivo no encontrado: $fullPath"
+            exit 1
+          }
+      
+          Write-Host "JSON original:"
+          Get-Content $fullPath
+      
+          $json = Get-Content $fullPath -Raw | ConvertFrom-Json
+      
           foreach ($property in $json.PSObject.Properties) {
             $envValue = $env:$($property.Name)
             if ($envValue) {
+              Write-Host "Reemplazando '$($property.Name)' con valor del entorno."
               $json.$($property.Name) = $envValue
             }
           }
+      
+          $json | ConvertTo-Json -Depth 10 | Set-Content $fullPath -Encoding UTF8
+      
+          Write-Host "Transformación completada. Contenido final:"
+          Get-Content $fullPath
 
-          $json | ConvertTo-Json -Depth 10 | Set-Content $fullPath
-        working-directory: ${{ inputs.workingDirectoryToTransform }}
-        shell: powershell
 
       - name: Print Config File After Transformation
         shell: pwsh
