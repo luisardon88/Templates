@@ -35,9 +35,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: Show all files
-        run: tree -a
 
       - name: Print parameters
         shell: pwsh
@@ -76,7 +73,7 @@ jobs:
       - name: Delete PDB files
         run: |
           Get-ChildItem -Recurse -Include *.pdb | Remove-Item -Force
-        working-directory: ${{ github.workspace }}
+        working-directory: "${{ inputs.pathToProjects }}"
         shell: pwsh
 
       - name: Copy files to artifact path
