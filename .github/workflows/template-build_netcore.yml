@@ -79,44 +79,27 @@ jobs:
       - name: Copy Files
         shell: pwsh
         run: |
-          $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}\${{ inputs.targetFramework }}\PubTmp\Out"
-          $outDirs = Get-ChildItem -Path $sourceBase -Recurse -Directory | Where-Object { $_.FullName -like '*\PubTmp\Out' }
-
-          write host $sourceBase
-          write host $outDirs
-
-          if (Test-Path $sourceBase) 
-          {
-              Write-Host "La ruta base existe"
-          } else {
-              Write-Host "La ruta base NO existe"
-          }
-
-          if (Test-Path $outDirs) 
-          {
-              Write-Host "La ruta out existe"
-          } else {
-              Write-Host "La ruta out NO existe"
-          }
-          
-          
-          if (-not $outDirs) {
-            Write-Error "No PubTmp\\Out folders found"
-            exit 1
-          }
-      
-          foreach ($outDir in $outDirs) {
-            $sourcePath = $outDir.FullName
+            $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}\${{ inputs.targetFramework }}\PubTmp\Out"
             $targetPath = Join-Path "${{ inputs.artifactPath }}" "${{ inputs.artifactName }}"
+            
+            Write-Host "Source path: $sourceBase"
+            Write-Host "Target path: $targetPath"
+            
+            if (-not (Test-Path $sourceBase)) {
+              Write-Error "PubTmp\Out folder not found at $sourceBase"
+              exit 1
+            }
+            
+            # Crear carpeta de destino si no existe
             New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
-      
-            # Copy all except .pdb files
-            Get-ChildItem -Path $sourcePath -Recurse -File | Where-Object { $_.Extension -ne '.pdb' } | ForEach-Object {
-              $dest = Join-Path $targetPath ($_.FullName.Substring($sourcePath.Length + 1))
+            
+            # Copiar archivos excepto .pdb, manteniendo estructura
+            Get-ChildItem -Path $sourceBase -Recurse -File | Where-Object { $_.Extension -ne '.pdb' } | ForEach-Object {
+              $relativePath = $_.FullName.Substring($sourceBase.Length).TrimStart('\')
+              $dest = Join-Path $targetPath $relativePath
               New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
               Copy-Item -Path $_.FullName -Destination $dest -Force
             }
-          }
 
       - name: Archive artifact
         run: |
