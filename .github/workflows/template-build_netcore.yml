@@ -76,25 +76,29 @@ jobs:
         working-directory: ${{ github.workspace }}
         shell: pwsh
       
-      - name: Copy files to artifact path
+      - name: Copy Files
+        shell: pwsh
         run: |
-          $buildPath = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}"
-          
-          # Buscar carpeta "Out" bajo cualquier carpeta "PubTmp"
-          $pubTmpOut = Get-ChildItem -Path $buildPath -Recurse -Directory | Where-Object { $_.FullName -like '*\PubTmp\Out' }
-          
-          if ($pubTmpOut) {
-            foreach ($outDir in $pubTmpOut) {
-              Write-Host "Copying from: $($outDir.FullName)"
-              $destination = Join-Path "${{ inputs.artifactPath }}" "${{ inputs.artifactName }}"
-              New-Item -ItemType Directory -Path $destination -Force | Out-Null
-              Copy-Item -Path "$($outDir.FullName)\*" -Destination $destination -Recurse -Exclude *.pdb
-            }
-          } else {
-            Write-Host "PubTmp\\Out folder not found"
+          $sourceBase = Join-Path "${{ github.workspace }}" "${{ inputs.project }}\obj\${{ inputs.configuration }}"
+          $outDirs = Get-ChildItem -Path $sourceBase -Recurse -Directory | Where-Object { $_.FullName -like '*\PubTmp\Out' }
+      
+          if (-not $outDirs) {
+            Write-Error "No PubTmp\\Out folders found"
             exit 1
           }
-        shell: pwsh
+      
+          foreach ($outDir in $outDirs) {
+            $sourcePath = $outDir.FullName
+            $targetPath = Join-Path "${{ inputs.artifactPath }}" "${{ inputs.artifactName }}"
+            New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
+      
+            # Copy all except .pdb files
+            Get-ChildItem -Path $sourcePath -Recurse -File | Where-Object { $_.Extension -ne '.pdb' } | ForEach-Object {
+              $dest = Join-Path $targetPath ($_.FullName.Substring($sourcePath.Length + 1))
+              New-Item -ItemType Directory -Path (Split-Path $dest) -Force | Out-Null
+              Copy-Item -Path $_.FullName -Destination $dest -Force
+            }
+          }
 
       - name: Archive artifact
         run: |
