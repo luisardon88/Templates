@@ -1,0 +1,145 @@
+name: Deploy WebApp to IIS
+
+on:
+  workflow_call:
+    inputs:
+      deployPath:
+        description: 'Ruta de despliegue en IIS'
+        required: true
+        type: string
+      backupPath:
+        description: 'Ruta de respaldo'
+        required: true
+        type: string
+      websiteName:
+        description: 'Nombre del sitio IIS'
+        required: true
+        type: string
+      poolName:
+        description: 'Nombre del App Pool'
+        required: true
+        type: string
+      poolUser:
+        description: 'Usuario del App Pool'
+        required: true
+        type: string
+      poolPass:
+        description: 'Password del App Pool'
+        required: true
+        type: string
+      port:
+        description: 'Puerto del sitio web'
+        required: true
+        type: string
+      artifactName:
+        description: 'Nombre del artefacto'
+        required: true
+        type: string
+      runner:
+        description: 'Nombre del runner'
+        required: true
+        type: string
+
+jobs:
+  deploy-webapp:
+    name: Deploy Web Application IIS
+    runs-on: ${{ inputs.runner }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Crear o actualizar AppPool
+        shell: pwsh
+        run: |
+          Import-Module WebAdministration
+          $poolName = "${{ inputs.poolName }}"
+          if (Test-Path IIS:\AppPools\$poolName) {
+            Write-Host "El AppPool '$poolName' ya existe."
+          } else {
+            Write-Host "Creando AppPool '$poolName'..."
+            New-WebAppPool -Name $poolName -Force
+          }
+
+      - name: Set IIS variables
+        shell: pwsh
+        run: |
+          Import-Module WebAdministration
+          $site = "${{ inputs.websiteName }}"
+          $path = "${{ inputs.deployPath }}"
+          $pool = "${{ inputs.poolName }}"
+          $port = "${{ inputs.port }}"
+          $user = "${{ inputs.poolUser }}"
+          $pass = "${{ inputs.poolPass }}"
+
+          if (-not (Test-Path "IIS:\Sites\$site")) {
+            New-Website -Name $site -Port $port -PhysicalPath $path -ApplicationPool $pool
+          }
+
+          Set-ItemProperty "IIS:\Sites\$site" -Name applicationPool -Value $pool
+          Set-ItemProperty IIS:\AppPools\$pool -Name processModel.identityType -Value 3
+          Set-ItemProperty IIS:\AppPools\$pool -Name processModel.userName -Value $user
+          Set-ItemProperty IIS:\AppPools\$pool -Name processModel.password -Value $pass
+
+      - name: Detener pool
+        shell: pwsh
+        run: |
+          $iso = Get-WebAppPoolState -Name "${{ inputs.poolName }}"
+          if ($iso.Value -eq "Started") {
+            Stop-WebAppPool -Name "${{ inputs.poolName }}"
+          }
+
+      - name: Respaldo
+        shell: pwsh
+        run: |
+          $source = "${{ inputs.deployPath }}"
+          $destination = "${{ inputs.backupPath }}"
+          if (Test-Path $source) {
+            if (-not (Test-Path $destination)) {
+              New-Item -Path $destination -ItemType Directory
+            }
+            Remove-Item -Recurse -Force "$destination\*"
+            Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+          }
+
+      - name: Copiar archivos a IIS
+        shell: pwsh
+        run: |
+          $source = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "*.zip" | Select-Object -First 1
+          $destination = "${{ inputs.deployPath }}"
+
+          if (-Not (Test-Path $destination)) {
+            New-Item -Path $destination -ItemType Directory -Force
+          }
+
+          Remove-Item -Recurse -Force "$destination\*"
+          Copy-Item -Path $source.FullName -Destination "$destination\${{ inputs.artifactName }}.zip" -Force
+
+      - name: Imprimir rutas
+        shell: pwsh
+        run: |
+          Write-Host "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
+
+      - name: Descomprimir archivos
+        shell: pwsh
+        run: |
+          $zip = "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
+          Expand-Archive -Path $zip -DestinationPath "${{ inputs.deployPath }}" -Force
+
+      - name: Eliminar .zip
+        shell: pwsh
+        run: |
+          Remove-Item "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
+
+      - name: Set target pool
+        shell: pwsh
+        run: |
+          Import-Module WebAdministration
+          Set-ItemProperty "IIS:\Sites\${{ inputs.websiteName }}" -Name applicationPool -Value "${{ inputs.poolName }}"
+
+      - name: Iniciar pool
+        shell: pwsh
+        run: |
+          Start-WebAppPool -Name "${{ inputs.poolName }}"
+
+      
