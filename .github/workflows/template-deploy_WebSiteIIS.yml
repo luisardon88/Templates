@@ -52,14 +52,18 @@ jobs:
       - name: Crear o actualizar AppPool
         shell: pwsh
         run: |
-          Import-Module WebAdministration
-          $poolName = "${{ inputs.poolName }}"
-          if (Test-Path IIS:\AppPools\$poolName) {
-            Write-Host "El AppPool '$poolName' ya existe."
-          } else {
-            Write-Host "Creando AppPool '$poolName'..."
-            New-WebAppPool -Name $poolName -Force
-          }
+            Import-Module WebAdministration
+            $poolName = "${{parameters.poolName}}"
+            # Crear App Pool si no existe
+            if (Test-Path IIS:\AppPools\$poolName) 
+            {
+                Write-Host "El AppPool '$poolName' ya existe."
+            }
+            else 
+            {
+                Write-Host "Creando AppPool '$poolName'..."
+                New-WebAppPool -Name $poolName -Force
+            }
 
       - name: Set IIS variables
         shell: pwsh
