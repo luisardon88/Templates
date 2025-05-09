@@ -50,7 +50,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Crear o actualizar AppPool
-        shell: pwsh
         run: |
             Import-Module WebAdministration
             $poolName = "${{inputs.poolName}}"
@@ -64,6 +63,7 @@ jobs:
                 Write-Host "Creando AppPool '$poolName'..."
                 New-WebAppPool -Name $poolName -Force
             }
+        shell: powershell
 
       - name: Set IIS variables
         shell: pwsh
