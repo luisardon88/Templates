@@ -121,7 +121,7 @@ jobs:
           }
 
           Remove-Item -Recurse -Force "$destination\*"
-          Copy-Item -Path $source.FullName -Destination "$destination\${{ inputs.artifactName }}.zip" -Force
+          Copy-Item -Path $source -Destination "$destination\${{ inputs.artifactName }}.zip" -Force
         shell: powershell
 
       - name: Imprimir rutas
