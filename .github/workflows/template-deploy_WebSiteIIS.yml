@@ -53,7 +53,7 @@ jobs:
         shell: pwsh
         run: |
             Import-Module WebAdministration
-            $poolName = "${{parameters.poolName}}"
+            $poolName = "${{inputs.poolName}}"
             # Crear App Pool si no existe
             if (Test-Path IIS:\AppPools\$poolName) 
             {
