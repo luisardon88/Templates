@@ -113,7 +113,7 @@ jobs:
 
       - name: Copiar archivos a IIS
         run: |
-          $source = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "*.zip" | Select-Object -First 1
+          $source = ${{ github.workspace}}/${{ inputs.artifactName }}.zip
           $destination = "${{ inputs.deployPath }}"
 
           if (-Not (Test-Path $destination)) {
