@@ -91,15 +91,14 @@ jobs:
         shell: powershell
         
       - name: Detener pool
-        shell: powershell
         run: |
           $iso = Get-WebAppPoolState -Name "${{ inputs.poolName }}"
           if ($iso.Value -eq "Started") {
             Stop-WebAppPool -Name "${{ inputs.poolName }}"
           }
+        shell: powershell
 
       - name: Respaldo
-        shell: powershell
         run: |
           $source = "${{ inputs.deployPath }}"
           $destination = "${{ inputs.backupPath }}"
@@ -110,9 +109,9 @@ jobs:
             Remove-Item -Recurse -Force "$destination\*"
             Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
           }
+        shell: powershell
 
       - name: Copiar archivos a IIS
-        shell: powershell
         run: |
           $source = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "*.zip" | Select-Object -First 1
           $destination = "${{ inputs.deployPath }}"
@@ -123,32 +122,33 @@ jobs:
 
           Remove-Item -Recurse -Force "$destination\*"
           Copy-Item -Path $source.FullName -Destination "$destination\${{ inputs.artifactName }}.zip" -Force
+        shell: powershell
 
       - name: Imprimir rutas
-        shell: powershell
         run: |
           Write-Host "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
+        shell: powershell
 
       - name: Descomprimir archivos
-        shell: powershell
         run: |
           $zip = "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
           Expand-Archive -Path $zip -DestinationPath "${{ inputs.deployPath }}" -Force
+        shell: powershell
 
       - name: Eliminar .zip
-        shell: powershell
         run: |
           Remove-Item "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
+        shell: powershell
 
       - name: Set target pool
-        shell: powershell
         run: |
           Import-Module WebAdministration
           Set-ItemProperty "IIS:\Sites\${{ inputs.websiteName }}" -Name applicationPool -Value "${{ inputs.poolName }}"
-
-      - name: Iniciar pool
         shell: powershell
+        
+      - name: Iniciar pool
         run: |
           Start-WebAppPool -Name "${{ inputs.poolName }}"
+        shell: powershell
 
       
