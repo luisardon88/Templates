@@ -51,6 +51,11 @@ jobs:
 
       - name: Crear o actualizar AppPool
         run: |
+            write-host "Hola mundo"
+        shell: powershell
+        
+      - name: Crear o actualizar AppPool
+        run: |
             Import-Module WebAdministration
             $poolName = "${{inputs.poolName}}"
             # Crear App Pool si no existe
