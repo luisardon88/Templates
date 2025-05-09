@@ -91,7 +91,7 @@ jobs:
         shell: powershell
         
       - name: Detener pool
-        shell: pwsh
+        shell: powershell
         run: |
           $iso = Get-WebAppPoolState -Name "${{ inputs.poolName }}"
           if ($iso.Value -eq "Started") {
@@ -99,7 +99,7 @@ jobs:
           }
 
       - name: Respaldo
-        shell: pwsh
+        shell: powershell
         run: |
           $source = "${{ inputs.deployPath }}"
           $destination = "${{ inputs.backupPath }}"
@@ -112,7 +112,7 @@ jobs:
           }
 
       - name: Copiar archivos a IIS
-        shell: pwsh
+        shell: powershell
         run: |
           $source = Get-ChildItem -Path "${{ github.workspace }}" -Recurse -Filter "*.zip" | Select-Object -First 1
           $destination = "${{ inputs.deployPath }}"
@@ -125,29 +125,29 @@ jobs:
           Copy-Item -Path $source.FullName -Destination "$destination\${{ inputs.artifactName }}.zip" -Force
 
       - name: Imprimir rutas
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
 
       - name: Descomprimir archivos
-        shell: pwsh
+        shell: powershell
         run: |
           $zip = "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
           Expand-Archive -Path $zip -DestinationPath "${{ inputs.deployPath }}" -Force
 
       - name: Eliminar .zip
-        shell: pwsh
+        shell: powershell
         run: |
           Remove-Item "${{ inputs.deployPath }}\${{ inputs.artifactName }}.zip"
 
       - name: Set target pool
-        shell: pwsh
+        shell: powershell
         run: |
           Import-Module WebAdministration
           Set-ItemProperty "IIS:\Sites\${{ inputs.websiteName }}" -Name applicationPool -Value "${{ inputs.poolName }}"
 
       - name: Iniciar pool
-        shell: pwsh
+        shell: powershell
         run: |
           Start-WebAppPool -Name "${{ inputs.poolName }}"
 
