@@ -113,7 +113,7 @@ jobs:
 
       - name: Copiar archivos a IIS
         run: |
-          $source = ${{ github.workspace}}/${{ inputs.artifactName }}.zip
+          $source = "C:\actions-runner\_work\${{ inputs.artifactName }}.zip"
           $destination = "${{ inputs.deployPath }}"
 
           if (-Not (Test-Path $destination)) {
