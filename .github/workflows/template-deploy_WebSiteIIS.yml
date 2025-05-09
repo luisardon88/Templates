@@ -111,9 +111,15 @@ jobs:
           }
         shell: powershell
 
+      - name: Descargar artefacto
+        uses: actions/download-artifact@v4
+        with:
+          name: "{{ inputs.artifactName }}"
+          path: ./build-output
+
       - name: Copiar archivos a IIS
         run: |
-          $source = "C:\actions-runner\_work\${{ inputs.artifactName }}.zip"
+          $source = "./build-output/*"
           $destination = "${{ inputs.deployPath }}"
 
           if (-Not (Test-Path $destination)) {
