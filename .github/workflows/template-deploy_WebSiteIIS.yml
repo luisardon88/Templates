@@ -71,7 +71,6 @@ jobs:
         shell: powershell
 
       - name: Set IIS variables
-        shell: pwsh
         run: |
           Import-Module WebAdministration
           $site = "${{ inputs.websiteName }}"
@@ -89,7 +88,8 @@ jobs:
           Set-ItemProperty IIS:\AppPools\$pool -Name processModel.identityType -Value 3
           Set-ItemProperty IIS:\AppPools\$pool -Name processModel.userName -Value $user
           Set-ItemProperty IIS:\AppPools\$pool -Name processModel.password -Value $pass
-
+        shell: powershell
+        
       - name: Detener pool
         shell: pwsh
         run: |
