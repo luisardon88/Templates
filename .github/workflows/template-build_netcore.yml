@@ -111,4 +111,5 @@ jobs:
         with:
           name: ${{ inputs.artifactName }}
           path: "${{ github.workspace}}/${{ inputs.artifactName }}.zip"
+          retention-days: 1
 
